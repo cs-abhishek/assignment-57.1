@@ -3,10 +3,16 @@ import './ProductDetails.css';
 
 const ProductDetails = ({ product, onBack }) => {
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   if (!product) {
     return <div>Product not found</div>;
   }
+
+  const calculateOriginalPrice = (price, discountPercentage) => {
+    if (!discountPercentage || discountPercentage === 0) return null;
+    return (price / (1 - discountPercentage / 100)).toFixed(2);
+  };
 
   const handleAddToCart = () => {
     console.log(`Added ${quantity} of ${product.title} to cart`);
@@ -23,28 +29,49 @@ const ProductDetails = ({ product, onBack }) => {
         <div className="product-details-content">
           <div className="product-image-section">
             <img 
-              src={product.image} 
+              src={product.thumbnail || product.images?.[selectedImage] || product.images?.[0]} 
               alt={product.title}
               className="product-details-image"
             />
+            {product.images && product.images.length > 1 && (
+              <div className="thumbnail-images">
+                {product.images.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image}
+                    alt={`${product.title} ${index + 1}`}
+                    className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                    onClick={() => setSelectedImage(index)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="product-info-section">
             <h1 className="product-details-title">{product.title}</h1>
             
             <div className="product-details-price">
-              <span className="current-price">${product.price.toFixed(2)}</span>
-              {product.originalPrice && (
-                <span className="original-price">${product.originalPrice.toFixed(2)}</span>
+              <span className="current-price">${product.price}</span>
+              {product.discountPercentage > 0 && (
+                <span className="original-price">
+                  ${calculateOriginalPrice(product.price, product.discountPercentage)}
+                </span>
+              )}
+              {product.discountPercentage > 0 && (
+                <span className="discount-badge">
+                  {Math.round(product.discountPercentage)}% OFF
+                </span>
               )}
             </div>
             
+            <div className="product-rating">
+              <span className="rating-value">{product.rating} ★</span>
+              <span className="rating-count">({product.reviews?.length || 0} reviews)</span>
+            </div>
+            
             <div className="product-description">
-              <p>
-                Neque porro quisquam est, qui dolore ipsum quia dolor sit amet, 
-                consectetur adipisci velit, sed quia non incidunt lores ta porro ame. 
-                numquam eius modi tempora incidunt lores ta porro ame.
-              </p>
+              <p>{product.description || 'No description available.'}</p>
             </div>
             
             <div className="product-actions">
